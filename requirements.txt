@@ -15,9 +15,11 @@ idna==2.7
 incremental==17.5.0
 lxml==4.2.5
 parsel==1.5.1
+pdfminer.six==20181108
 pyasn1==0.4.4
 pyasn1-modules==0.2.2
 pycparser==2.19
+pycryptodome==3.7.0
 PyDispatcher==2.0.5
 PyHamcrest==1.9.0
 pyOpenSSL==18.0.0
@@ -27,7 +29,7 @@ requests==2.20.1
 Scrapy==1.5.1
 service-identity==17.0.0
 six==1.11.0
-tika==1.19
+sortedcontainers==2.1.0
 Twisted==18.9.0
 urllib3==1.24.1
 w3lib==1.19.0

@@ -1,9 +1,14 @@
 """ API to look for students that passed in universities entrance exam """
 
+from io import StringIO
+from pdfminer.pdfpage import PDFPage
+from pdfminer.layout import LAParams
+from pdfminer.converter import TextConverter
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 import os
 import hug
 import urllib.request
-from tika import parser
+from pdfminer import pdfparser
 from scrapy.crawler import CrawlerProcess
 from multiprocessing import Process, Pipe
 from scrapy.utils.project import get_project_settings
@@ -37,7 +42,8 @@ example_names_p = 'names=ARTHUR%20JOSÉ%20GIL%20DEJEAN,' + \
 
 @hug.get('/search-pdf', examples='url='+example_url_pdf+'&'+example_names_p)
 def search_pdf(url: hug.types.text, names: hug.types.comma_separated_list):
-    """ Download pdf on url and search it for listed names """
+    """ Get pdf from target url, parse it and search by names.""" + \
+        """Return list of names"""
     r = urllib.request.urlretrieve(url, 'pdf_file.pdf')
     ret = process('pdf_file.pdf', names)
 
@@ -57,7 +63,7 @@ def crawl(url, names, conn):
 
 
 def process(pdf_file, names):
-    content = parser.from_file(pdf_file)['content'].upper()
+    content = convert_pdf_to_txt('pdf_file.pdf')
 
     names_in = []
     for name in names:
@@ -65,3 +71,24 @@ def process(pdf_file, names):
             names_in.append(name.title())
 
     return names_in
+
+
+def convert_pdf_to_txt(path):
+    rsrcmgr = PDFResourceManager()
+    retstr = StringIO()
+    device = TextConverter(rsrcmgr, retstr,
+                           codec='utf-8', laparams=LAParams())
+    fp = open(path, 'rb')
+    interpreter = PDFPageInterpreter(rsrcmgr, device)
+
+    for page in PDFPage.get_pages(fp, set(), maxpages=0,
+                                  password="", caching=True,
+                                  check_extractable=True):
+        interpreter.process_page(page)
+
+    text = retstr.getvalue()
+
+    fp.close()
+    device.close()
+    retstr.close()
+    return text
